@@ -29,10 +29,13 @@ public class GiftService {
 //    }
 
     static {
-        Twilio.init("AC9eefa2c5a15d89e1df1cda04c4bae244", "e16f5d20786b01a7b09679513e0bfabb");
+        Twilio.init("AC9eefa2c5a15d89e1df1cda04c4bae244", "35e9138acae767b136e0e97042b17ca1");
     }
 
     public String createGiftLink(GiftRequest request) {
+        if (!("sms".equalsIgnoreCase(request.getMethod()))) {
+            return "Method must be SMS only.";
+        }
         Gift gift = new Gift();
         gift.setRecipient(request.getRecipient());
         gift.setMethod(request.getMethod());
@@ -40,19 +43,29 @@ public class GiftService {
         gift.setStatus("pending");
         gift.setCreatedAt(new Date());
         gift.setUpdatedAt(new Date());
-        giftRepository.save(gift);
 
-        if ("sms".equalsIgnoreCase(request.getMethod())) {
+        try {
             sendSmsNotification(request.getRecipient(), request.getLinkId());
         }
-        return gift.getProductId();
+        catch(Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
+
+        giftRepository.save(gift);
+
+        return "Link generated and sent. Link ID: " + gift.getProductId();
     }
 
     private void sendSmsNotification(String recipient, String linkId) {
-        Message message = Message.creator(
-                new PhoneNumber(recipient),
-                new PhoneNumber("+12402527052"),
-                "You've received a gift!" + linkId).create();
+        try {
+            Message message = Message.creator(
+                    new PhoneNumber(recipient),
+                    new PhoneNumber("+12402527052"),
+                    "You've received a gift!" + linkId).create();
+        }
+        catch(Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
     public void updateGiftDetails(String productId, GiftDetails details) {
@@ -63,6 +76,4 @@ public class GiftService {
         gift.setUpdatedAt(new Date());
         giftRepository.save(gift);
     }
-
-
 }

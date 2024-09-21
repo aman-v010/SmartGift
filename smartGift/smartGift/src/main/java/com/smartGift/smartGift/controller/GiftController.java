@@ -4,6 +4,7 @@ import com.smartGift.smartGift.payload.request.GiftDetails;
 import com.smartGift.smartGift.payload.request.GiftRequest;
 import com.smartGift.smartGift.service.GiftService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +20,14 @@ public class GiftController {
 
     @PostMapping("/generate-link")
     public ResponseEntity<String> generateLink(@RequestBody GiftRequest request) {
-        String response = giftService.createGiftLink(request);
-        return ResponseEntity.ok("Link generated and sent. Link ID: " + response);
+        try{
+            String response = giftService.createGiftLink(request);
+            return ResponseEntity.ok(response);
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error occurred: " + e.getMessage());
+        }
     }
 
     @PostMapping("/submit-details/{productId}")
